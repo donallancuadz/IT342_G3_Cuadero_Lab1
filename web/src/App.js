@@ -1,32 +1,39 @@
-import React, { useEffect, useState } from "react";
-import "./App.css";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import { loadAuth } from "./services/auth";
 
-function App() {
-  const [page, setPage] = useState("login");
-
-  useEffect(() => {
-    const auth = loadAuth();
-    setPage(auth ? "dashboard" : "login");
-  }, []);
-
-  return (
-    <div>
-      <nav style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 16 }}>
-        <button onClick={() => setPage("register")}>Register</button>
-        <button onClick={() => setPage("login")}>Login</button>
-        <button onClick={() => setPage("dashboard")}>Dashboard</button>
-      </nav>
-
-      {page === "register" && <Register />}
-      {page === "login" && <Login onLoggedIn={() => setPage("dashboard")} />}
-      {page === "dashboard" && <Dashboard onLogout={() => setPage("login")} />}
-    </div>
-  );
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  if (!token) return <Navigate to="/login" replace />;
+  return children;
 }
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Default route */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Public routes */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+
+        {/* Protected route */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
