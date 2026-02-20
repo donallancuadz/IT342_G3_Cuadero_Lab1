@@ -1,28 +1,57 @@
-// Mock API for BorrowBox
+const API_BASE = "http://localhost:8080";
 
-// Mock register function
-export const registerUser = (data) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ status: "success", user: { id: 1, name: data.name, email: data.email } });
-    }, 500);
-  });
-};
+function parseJsonOrText(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
 
-// Mock login function
-export const loginUser = (data) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ status: "success", user: { id: 1, name: "John Doe", email: data.email } });
-    }, 500);
-  });
-};
+function basicAuthHeader(email, password) {
+  const token = btoa(`${email}:${password}`);
+  return { Authorization: `Basic ${token}` };
+}
 
-// Mock get current user function
-export const getCurrentUser = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ id: 1, name: "John Doe", email: "johndoe@example.com" });
-    }, 500);
+export async function registerUser({ fullName, email, password }) {
+  const res = await fetch(`${API_BASE}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ fullName, email, password }),
   });
-};
+
+  const text = await res.text();
+  const data = parseJsonOrText(text);
+
+  if (!res.ok) throw new Error(typeof data === "string" ? data : "Register failed");
+  return data;
+}
+
+export async function loginUser({ email, password }) {
+  const res = await fetch(`${API_BASE}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+
+  const text = await res.text();
+  const data = parseJsonOrText(text);
+
+  if (!res.ok) throw new Error(typeof data === "string" ? data : "Login failed");
+  return data;
+}
+
+export async function getMe(email, password) {
+  const res = await fetch(`${API_BASE}/api/user/me`, {
+    method: "GET",
+    headers: {
+      ...basicAuthHeader(email, password),
+    },
+  });
+
+  const text = await res.text();
+  const data = parseJsonOrText(text);
+
+  if (!res.ok) throw new Error(typeof data === "string" ? data : "Unauthorized");
+  return data;
+}

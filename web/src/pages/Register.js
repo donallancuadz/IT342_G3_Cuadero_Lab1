@@ -1,32 +1,71 @@
 import React, { useState } from "react";
 import { registerUser } from "../services/api";
 
-const Register = () => {
-  const [name, setName] = useState("");
+export default function Register() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
-  const handleRegister = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    const response = await registerUser({ name, email, password });
-    if (response.status === "success") {
-      setMessage(`Registered successfully as ${response.user.name}`);
+    setMsg("");
+    setErr("");
+
+    try {
+      const data = await registerUser({ fullName, email, password });
+      setMsg(`Registered: ${data.email}`);
+      setFullName("");
+      setEmail("");
+      setPassword("");
+    } catch (e2) {
+      setErr(e2.message);
     }
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: 420, margin: "40px auto" }}>
       <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} /><br/>
-        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} /><br/>
-        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} /><br/>
-        <button type="submit">Register</button>
+
+      <form onSubmit={onSubmit}>
+        <div style={{ marginBottom: 10 }}>
+          <label>Full Name</label>
+          <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+            style={{ width: "100%" }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <label>Email</label>
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            required
+            style={{ width: "100%" }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <label>Password</label>
+          <input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            required
+            style={{ width: "100%" }}
+          />
+        </div>
+
+        <button type="submit">Create Account</button>
       </form>
-      {message && <p>{message}</p>}
+
+      {msg && <p style={{ marginTop: 12 }}>{msg}</p>}
+      {err && <p style={{ marginTop: 12, color: "crimson" }}>{err}</p>}
     </div>
   );
-};
-
-export default Register;
+}

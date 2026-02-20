@@ -1,24 +1,53 @@
-# BorrowBox
+# BorrowBox – User Registration and Authentication System
 
 ## Project Description
-BorrowBox is an application for borrowing and lending shared items within a school or organization. Users can register, log in, view available items, request items to borrow, and manage their profile.
+BorrowBox is a full-stack web application developed as part of an academic laboratory activity.
+It implements a complete **user registration and authentication system** using Spring Boot, MySQL, and ReactJS.
+
+The system allows users to securely register, log in, view their profile, and log out through a web interface.
+
+---
 
 ## Technologies Used
-- Backend: Spring Boot (Java 17)
-- Database: MySQL
-- Frontend: ReactJS
-- API Testing: Postman
+
+### Backend
+- Java 17
+- Spring Boot
+- Spring Security
+- Spring Data JPA (Hibernate)
+- MySQL
+- Maven
+
+### Frontend
+- ReactJS (Create React App)
+- JavaScript (ES6)
+- Fetch API
+
+### Tools
+- Git & GitHub
+- Postman (API testing)
+- VS Code
+
+---
+
+## Implemented Features
+
+### Backend
+- User Registration (`POST /api/auth/register`)
+- User Login (`POST /api/auth/login`)
+- Get Logged-in User (`GET /api/user/me`) – protected
+- Password encryption using **BCrypt**
+- MySQL database integration
+- Spring Security (Basic Authentication)
+- CORS configuration for frontend integration
+
+### Frontend
+- Register page
+- Login page
+- Dashboard/Profile page
+- Logout functionality
+- Backend API integration
+
+---
 
 ## Folder Structure
-- backend: Spring Boot project
-- web: ReactJS frontend
-- mobile: empty (for future mobile app)
-- docs: FRS, diagrams, screenshots
-
-## API Endpoints (planned)
-| Endpoint             | Method | Description                  |
-|---------------------|--------|-----------------------------|
-| /api/auth/register   | POST   | Register new user           |
-| /api/auth/login      | POST   | User login                  |
-| /api/user/me         | GET    | Get logged-in user info     |
-
