@@ -1,6 +1,16 @@
 package com.example.demo.service;
 
+
+import java.time.Instant;
+
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.RegisterRequest;
@@ -12,12 +22,27 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtEncoder jwtEncoder;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    @Value("${app.jwt.issuer}")
+    private String issuer;
+
+    @Value("${app.jwt.exp-minutes}")
+    private long expMinutes;
+
+    public AuthService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtEncoder jwtEncoder
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtEncoder = jwtEncoder;
     }
 
+    // =========================
+    // REGISTER
+    // =========================
     public User register(RegisterRequest req) {
         String email = req.getEmail().trim().toLowerCase();
 
@@ -25,28 +50,53 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already registered");
         }
 
-        String hashed = passwordEncoder.encode(req.getPassword());
+        String hashedPassword = passwordEncoder.encode(req.getPassword());
 
         User user = new User();
         user.setFullName(req.getFullName().trim());
         user.setEmail(email);
-        user.setPassword(hashed);
+        user.setPassword(hashedPassword);
 
         return userRepository.save(user);
     }
 
-            public User login(String email, String rawPassword) {
+    // =========================
+    // LOGIN (verify credentials)
+    // =========================
+    public User login(String email, String rawPassword) {
         String cleanEmail = email.trim().toLowerCase();
 
         User user = userRepository.findByEmail(cleanEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-        boolean matches = passwordEncoder.matches(rawPassword, user.getPassword());
-        if (!matches) {
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
         return user;
     }
 
+    // =========================
+    // JWT TOKEN GENERATION
+    // =========================
+    public String generateToken(User user) {
+        Instant now = Instant.now();
+        Instant expiry = now.plusSeconds(expMinutes * 60);
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer(issuer)
+                .issuedAt(now)
+                .expiresAt(expiry)
+                .subject(user.getEmail())      // subject = email
+                .claim("uid", user.getId())
+                .claim("name", user.getFullName())
+                .build();
+
+        return jwtEncoder.encode(
+                JwtEncoderParameters.from(
+                        JwsHeader.with(MacAlgorithm.HS256).build(),
+                        claims
+                )
+        ).getTokenValue();
+    }
 }
